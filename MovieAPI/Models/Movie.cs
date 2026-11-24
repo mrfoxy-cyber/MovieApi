@@ -8,5 +8,7 @@
         public int GenreId { get; set; }
         public int Duration { get; set; } // Duration in seconds
 
+        public ICollection<Actor> Actors { get; set; } = new List<Actor>();
+
     }
 }
