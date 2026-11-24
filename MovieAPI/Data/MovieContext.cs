@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieAPI.Models;
 
+namespace MovieAPI.Data;
 public class MovieContext(DbContextOptions<MovieContext> options) : DbContext(options)
 {
     public DbSet<MovieAPI.Models.Movie> Movie { get; set; } = default!;

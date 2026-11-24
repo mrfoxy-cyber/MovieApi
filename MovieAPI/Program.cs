@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 
+using MovieAPI.Data;
+using MovieAPI.Extensions;
+
 namespace MovieAPI
 {
     public class Program
@@ -23,6 +26,7 @@ namespace MovieAPI
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+                app.SeedData();
             }
 
             app.UseHttpsRedirection();
