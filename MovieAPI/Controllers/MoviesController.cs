@@ -18,21 +18,52 @@ public class MoviesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Movie>>> GetMovie()
     {
-        return await _context.Movie.ToListAsync();
+        return Ok(await _context.Movie
+                    .Select(movie => new
+                    {
+                        movie.Id,
+                        movie.Title,
+                        movie.Year,
+                        movie.GenreId,
+                        movie.Duration,
+                        Actors = movie.Actors.Select(actor => new
+                        {
+                            actor.Id,
+                            actor.Person.Name,
+                            actor.Person.LastName
+                        }).ToList()
+                    })
+                    .ToListAsync());
     }
 
     // GET: api/Movie/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Movie>> GetMovie(int id)
     {
-        var movie = await _context.Movie.FindAsync(id);
+        var movie =  await _context.Movie
+                    .Where(movie => movie.Id == id)
+                    .Select(movie => new
+                    {
+                        movie.Id,
+                        movie.Title,
+                        movie.Year,
+                        movie.GenreId,
+                        movie.Duration,
+                        Actors = movie.Actors.Select(actor => new
+                        {
+                            actor.Id,
+                            actor.Person.Name,
+                            actor.Person.LastName
+                        }).ToList()
+                    })
+                    .FirstOrDefaultAsync();
 
         if (movie == null)
         {
             return NotFound();
         }
 
-        return movie;
+        return Ok(movie);
     }
 
     // PUT: api/Movie/5
