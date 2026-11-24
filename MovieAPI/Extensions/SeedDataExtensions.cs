@@ -208,8 +208,6 @@ namespace MovieAPI.Extensions
                 return;
             }
 
-            context.SaveChanges();
-
             context.Movie.AddRange(movies);
 
             context.SaveChanges();
