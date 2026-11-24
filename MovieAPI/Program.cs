@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 
 namespace MovieAPI
 {
@@ -6,6 +7,9 @@ namespace MovieAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var connectionString = builder.Configuration.GetConnectionString("MovieContext") ?? throw new InvalidOperationException("Connection string 'MovieContext' not found.");
+
+            builder.Services.AddDbContext<MovieContext>(options => options.UseSqlServer(connectionString));
 
             // Add services to the container.
 

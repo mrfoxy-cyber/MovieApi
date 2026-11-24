@@ -9,6 +9,9 @@
 
         public int LanguageId { get; set; }
 
+        public required Languages Language { get; set; } // Navigation property to the Languages entity
+
+        public int BudgetId { get; set; }
         public required Budget Budget { get; set; }
     }
 }
