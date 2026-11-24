@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieAPI.Models;
+using MovieAPI.Data;
 
 [Route("api/[controller]")]
 [ApiController]
