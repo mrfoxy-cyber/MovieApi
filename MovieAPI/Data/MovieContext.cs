@@ -20,9 +20,8 @@ public class MovieContext(DbContextOptions<MovieContext> options) : DbContext(op
             .HasForeignKey(details => details.LanguageId);
 
         modelBuilder.Entity<Budget>()
-            .HasOne(Budget => Budget.Currency)
-            .WithMany()
-            .HasForeignKey(budget => budget.CurrencyId);
+            .Property(budget => budget.Amount)
+            .HasColumnType("decimal(18,4)");
 
         modelBuilder.Entity<Actor>()
             .HasOne(actor => actor.Person)
