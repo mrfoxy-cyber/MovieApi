@@ -6,6 +6,7 @@ public class MovieContext(DbContextOptions<MovieContext> options) : DbContext(op
 {
     public DbSet<MovieAPI.Models.Movie> Movie { get; set; } = default!;
     public DbSet<Actor> Actor => Set<Actor>();
+    public DbSet<Review> Review => Set<Review>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

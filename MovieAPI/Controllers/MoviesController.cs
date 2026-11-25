@@ -11,11 +11,43 @@ using MovieAPI.Models;
 [ApiController]
 public class MoviesController(MovieContext context) : ControllerBase
 {
-    // GET /api/movies returns a summary of each movie.
+    // GET /api/movies returns movie summaries with optional genre, year, and actor filters.
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MovieDTO>>> GetMovies()
+    public async Task<ActionResult<IEnumerable<MovieDTO>>> GetMovies(
+        [FromQuery] string? genre = null,
+        [FromQuery] int? year = null,
+        [FromQuery] string? actor = null)
     {
-        return Ok(await MovieSummaries().ToListAsync());
+        IQueryable<Movie> query = context.Movie;
+
+        if (!string.IsNullOrWhiteSpace(genre))
+        {
+            var genreName = genre.Trim();
+            query = query.Where(movie => movie.Genre.Name == genreName);
+        }
+
+        if (year is int releaseYear)
+        {
+            query = query.Where(movie => movie.Year == releaseYear);
+        }
+
+        if (!string.IsNullOrWhiteSpace(actor))
+        {
+            var actorName = actor.Trim();
+            query = query.Where(movie => movie.Actors.Any(castMember =>
+                castMember.Person.Name + " " + castMember.Person.LastName == actorName));
+        }
+
+        var movies = await query.Select(movie => new MovieDTO
+        {
+            Id = movie.Id,
+            Title = movie.Title,
+            Year = movie.Year,
+            GenreId = movie.GenreId,
+            Duration = movie.Duration
+        }).ToListAsync();
+
+        return Ok(movies);
     }
 
     // GET /api/movies/5 returns a movie summary.
@@ -173,18 +205,6 @@ public class MoviesController(MovieContext context) : ControllerBase
         context.Movie.Remove(movie);
         await context.SaveChangesAsync();
         return NoContent();
-    }
-
-    private IQueryable<MovieDTO> MovieSummaries()
-    {
-        return context.Movie.Select(movie => new MovieDTO
-        {
-            Id = movie.Id,
-            Title = movie.Title,
-            Year = movie.Year,
-            GenreId = movie.GenreId,
-            Duration = movie.Duration
-        });
     }
 
     private static MovieDTO ToMovieDTO(Movie movie)
