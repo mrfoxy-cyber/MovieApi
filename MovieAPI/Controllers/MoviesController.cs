@@ -6,30 +6,64 @@ using MovieAPI.DTOs;
 using MovieAPI.Models;
 
 
+// All actions in this controller start with /api/movies.
 [Route("api/[controller]")]
 [ApiController]
 public class MoviesController(MovieContext context) : ControllerBase
 {
+    // GET /api/movies returns a summary of each movie.
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MovieDTO>>> GetMovies()
     {
         return Ok(await MovieSummaries().ToListAsync());
     }
 
+    // GET /api/movies/5 returns a movie summary.
+    // GET /api/movies/5?withactors=true returns the movie and its cast.
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<MovieDTO>> GetMovie(int id)
+    public async Task<IActionResult> GetMovie(
+        int id, [FromQuery] bool withActors = false)
     {
-        var movie = await MovieSummaries()
-            .SingleOrDefaultAsync(movie => movie.Id == id);
+        var query = context.Movie.AsNoTracking();
+
+        // Load the cast and each actor's name only when requested.
+        if (withActors)
+        {
+            query = query
+                .Include(movie => movie.Actors)
+                .ThenInclude(actor => actor.Person);
+        }
+
+        var movie = await query.SingleOrDefaultAsync(movie => movie.Id == id);
 
         if (movie is null)
         {
             return NotFound();
         }
 
-        return Ok(movie);
+        var summary = ToMovieDTO(movie);
+
+        if (!withActors)
+        {
+            return Ok(summary);
+        }
+
+        return Ok(new MovieWithActorsDTO
+        {
+            Movie = summary,
+            Actors = movie.Actors.Select(actor => new ActorDTO
+            {
+                Id = actor.Id,
+                Name = actor.Person.Name,
+                LastName = actor.Person.LastName,
+                BirthYear = actor.Person.BirthDate == default
+                    ? null
+                    : actor.Person.BirthDate.Year
+            }).ToList()
+        });
     }
 
+    // GET /api/movies/5/details returns the movie, its details, cast, and reviews.
     [HttpGet("{id:int}/details")]
     public async Task<ActionResult<MovieDetailDTO>> GetMovieDetails(int id)
     {
@@ -75,6 +109,7 @@ public class MoviesController(MovieContext context) : ControllerBase
         });
     }
 
+    // POST /api/movies creates a movie and returns its summary and URL.
     [HttpPost]
     public async Task<ActionResult<MovieDTO>> PostMovie(MovieCreateDTO request)
     {
@@ -98,6 +133,7 @@ public class MoviesController(MovieContext context) : ControllerBase
         return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, ToMovieDTO(movie));
     }
 
+    // PUT /api/movies/5 updates the movie identified by the URL.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> PutMovie(int id, MovieUpdateDTO request)
     {
@@ -123,6 +159,7 @@ public class MoviesController(MovieContext context) : ControllerBase
         return NoContent();
     }
 
+    // DELETE /api/movies/5 removes the movie identified by the URL.
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteMovie(int id)
     {
