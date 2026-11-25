@@ -101,44 +101,59 @@ public class MoviesController(MovieContext context) : ControllerBase
     {
         var movie = await context.Movie
             .AsNoTracking()
-            .Include(movie => movie.Details!)
-                .ThenInclude(details => details.Language)
-            .Include(movie => movie.Details!)
-                .ThenInclude(details => details.Budget)
-                    .ThenInclude(budget => budget.Currency)
-            .Include(movie => movie.Reviews)
-                .ThenInclude(review => review.Reviewer)
-            .Include(movie => movie.Actors)
-                .ThenInclude(actor => actor.Person)
+            .Where(movie => movie.Id == id)
             .AsSplitQuery()
-            .SingleOrDefaultAsync(movie => movie.Id == id);
+            .Select(movie => new MovieDetailDTO
+            {
+                Movie = new MovieDTO
+                {
+                    Id = movie.Id,
+                    Title = movie.Title,
+                    Year = movie.Year,
+                    GenreId = movie.GenreId,
+                    Duration = movie.Duration
+                },
+                Details = movie.Details == null ? null : new MovieDetails
+                {
+                    Id = movie.Details.Id,
+                    MovieId = movie.Details.MovieId,
+                    Synopsis = movie.Details.Synopsis,
+                    LanguageId = movie.Details.LanguageId,
+                    Language = movie.Details.Language,
+                    BudgetId = movie.Details.BudgetId,
+                    Budget = new Budget
+                    {
+                        Id = movie.Details.Budget.Id,
+                        Amount = movie.Details.Budget.Amount,
+                        CurrencyId = movie.Details.Budget.CurrencyId,
+                        Currency = movie.Details.Budget.Currency
+                    }
+                },
+                Reviews = movie.Reviews.Select(review => new ReviewDTO
+                {
+                    Id = review.Id,
+                    ReviewerName = review.Reviewer.Name + " " + review.Reviewer.LastName,
+                    Comment = review.Comment,
+                    Rating = (int)review.Rating
+                }).ToList(),
+                Actors = movie.Actors.Select(actor => new ActorDTO
+                {
+                    Id = actor.Id,
+                    Name = actor.Person.Name,
+                    LastName = actor.Person.LastName,
+                    BirthYear = actor.Person.BirthDate == default(DateTime)
+                        ? null
+                        : actor.Person.BirthDate.Year
+                }).ToList()
+            })
+            .SingleOrDefaultAsync();
 
         if (movie is null)
         {
             return NotFound();
         }
 
-        return Ok(new MovieDetailDTO
-        {
-            Movie = ToMovieDTO(movie),
-            Details = movie.Details,
-            Reviews = movie.Reviews.Select(review => new ReviewDTO
-            {
-                Id = review.Id,
-                ReviewerName = $"{review.Reviewer.Name} {review.Reviewer.LastName}",
-                Comment = review.Comment,
-                Rating = (int)review.Rating
-            }).ToList(),
-            Actors = movie.Actors.Select(actor => new ActorDTO
-            {
-                Id = actor.Id,
-                Name = actor.Person.Name,
-                LastName = actor.Person.LastName,
-                BirthYear = actor.Person.BirthDate == default
-                    ? null
-                    : actor.Person.BirthDate.Year
-            }).ToList()
-        });
+        return Ok(movie);
     }
 
     // POST /api/movies creates a movie and returns its summary and URL.

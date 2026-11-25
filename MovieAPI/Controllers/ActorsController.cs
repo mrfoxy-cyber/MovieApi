@@ -14,7 +14,7 @@ namespace MovieAPI.Controllers
     {
         // GET /api/actors
 
-        [HttpGet("/actors")]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<ActorDTO>>> GetActors()
         {
             var query = context.Actor.AsNoTracking();
