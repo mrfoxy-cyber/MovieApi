@@ -1,0 +1,10 @@
+﻿namespace MovieAPI.DTOs
+{
+    public class ReviewDTO
+    {
+        public int Id { get; set; }
+        public required string ReviewerName { get; set; }
+        public string? Comment { get; set; }
+        public int Rating { get; set; }
+    }
+}
